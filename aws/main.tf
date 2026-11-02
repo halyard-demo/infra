@@ -6,7 +6,7 @@ resource "aws_ebs_volume" "scratch" {
   availability_zone = "us-east-1a"
   size              = 1
   type              = "gp3"
-  encrypted         = false
+  encrypted         = true
   tags = {
     Name = "halyard-scratch"
   }
