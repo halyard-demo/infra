@@ -7,3 +7,5 @@ Terraform for Halyard. Each directory is its own root module with its own state.
 
 Run `terraform init && terraform plan` inside a directory.
 
+
+The `cdk/` app (stack class declared in `cdk/bin/halyard.ts`) and its two workflows (`cdk-changeset.yml`, `cdk-deploy.yml`) are kept for later proofs. Their stack `halyard-cdk-data` is torn down: a change under `cdk/` needs the stack recreated first, or its deploy fails.
