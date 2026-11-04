@@ -24,4 +24,4 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::363776342490:role/halyard-cfn-deploy-role
           aws-region: us-east-1
-      - run: aws cloudformation deploy --stack-name halyard-cdk-data --template-file cdk/cdk.out/HalyardData.template.json --no-fail-on-empty-changeset
+      - run: aws cloudformation deploy --stack-name halyard-cdk-data --template-file cdk/cdk.out/HalyardData.template.json --no-fail-on-empty-changeset --tags arcturel:proof=529-cdk
