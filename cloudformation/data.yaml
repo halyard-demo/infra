@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Halyard data stack. Arcturel proof 529-cfn.
+Parameters:
+  Env:
+    Type: String
+    Default: a
+    Description: Which copy of the stack this is (a, or b for a second stack).
+Resources:
+  # The uploads bucket. Public access is not blocked here yet.
+  Uploads:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub halyard-cfn-data-uploads-${Env}-${AWS::AccountId}   # one bucket per copy of the stack
+      Tags:
+        - Key: team
+          Value: !Join ['-', [halyard, data]]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+Outputs:
+  BucketName:
+    Value: !Ref Uploads
