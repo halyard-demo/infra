@@ -1,0 +1,35 @@
+name: cfn-changeset
+# Customer CI (halyard-demo/infra): makes a change set for each pull request that touches the template, and never executes it. Assay reads it.
+on:
+  pull_request:
+    paths: ['cloudformation/**']
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read
+jobs:
+  changeset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-cfn-changeset-role
+          aws-region: us-east-1
+      - name: Create the change set (never executed)
+        env:
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          NAME="pr-${NUMBER}-${HEAD::7}"
+          aws cloudformation create-change-set --stack-name halyard-cfn-data --change-set-name "$NAME" --change-set-type UPDATE \
+            --template-body file://cloudformation/data.yaml --description "pull request ${NUMBER}, commit ${HEAD}"
+          aws cloudformation wait change-set-create-complete --stack-name halyard-cfn-data --change-set-name "$NAME" || true
+          aws cloudformation describe-change-set --stack-name halyard-cfn-data --change-set-name "$NAME" > describe.json
+          cat describe.json
+      - name: Post what the change set shows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          { echo '```json'; cat describe.json; echo '```'; } > comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md

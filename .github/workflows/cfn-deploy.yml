@@ -1,0 +1,19 @@
+name: cfn-deploy
+# Customer CI (halyard-demo/infra): deploys the template when a change merges to main. This is the customer's deploy, never Assay's.
+on:
+  push:
+    branches: [main]
+    paths: ['cloudformation/**']
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-cfn-deploy-role
+          aws-region: us-east-1
+      - run: aws cloudformation deploy --stack-name halyard-cfn-data --template-file cloudformation/data.yaml --no-fail-on-empty-changeset
