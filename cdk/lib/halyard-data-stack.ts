@@ -10,7 +10,7 @@ export class HalyardDataStack extends cdk.Stack {
     // Customer uploads. Keep the data when the stack goes.
     new s3.Bucket(this, 'Uploads', {
       bucketName: 'halyard-cdk-data-uploads-a-363776342490',
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     })
   }
