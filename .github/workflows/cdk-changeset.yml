@@ -36,9 +36,12 @@ jobs:
           aws cloudformation wait change-set-create-complete --stack-name halyard-cdk-data --change-set-name "$NAME" || true
           aws cloudformation describe-change-set --stack-name halyard-cdk-data --change-set-name "$NAME" > describe.json
           cat describe.json
+      - name: Show what the CDK says changes (cdk diff)
+        working-directory: cdk
+        run: npx cdk diff --no-version-reporting HalyardData 2>&1 | tee ../cdk-diff.txt || true
       - name: Post what the change set shows
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          { echo '```json'; cat describe.json; echo '```'; } > comment.md
+          { echo '```json'; cat describe.json; echo '```'; echo; echo 'cdk diff:'; echo '```'; cat cdk-diff.txt; echo '```'; } > comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md
