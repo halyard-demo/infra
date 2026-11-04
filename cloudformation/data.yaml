@@ -10,7 +10,7 @@ Resources:
   Uploads:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub halyard-cfn-data-uploads-${Env}-${AWS::AccountId}   # one bucket per copy of the stack
+      BucketName: !Sub halyard-cfn-data-uploads-${Env}-renamed-${AWS::AccountId}   # one bucket per copy of the stack
       Tags:
         - Key: team
           Value: !Join ['-', [halyard, data]]
