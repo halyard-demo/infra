@@ -22,7 +22,7 @@ jobs:
           terraform_version: 1.9.8
           terraform_wrapper: false
       # Read-only: this role can read the account and the state, and cannot change either.
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::363776342490:role/halyard-infra-plan
           aws-region: us-east-1
