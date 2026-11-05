@@ -1,5 +1,5 @@
 name: pulumi-deploy
-# Customer CI (halyard-demo/infra): deploys the Pulumi program when a change that touches it merges to main. The first run creates the stack.
+# Customer CI (halyard-demo/infra): deploys the Pulumi TypeScript program when a change that touches it merges to main. The first run creates the stack.
 on:
   push:
     branches: [main]
@@ -19,6 +19,12 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::363776342490:role/halyard-pulumi-deploy-role
           aws-region: us-east-1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the program's packages
+        working-directory: pulumi
+        run: npm ci
       - uses: pulumi/actions@v7
         with:
           command: up
