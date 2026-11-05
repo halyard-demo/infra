@@ -7,7 +7,7 @@ export class HalyardStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    // The code that defines your stack goes here (uploads for the app)
 
     new s3.Bucket(this, 'Uploads', {
       bucketName: 'halyard-cdk-data-uploads-a-363776342490',
