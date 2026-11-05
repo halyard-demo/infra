@@ -1,0 +1,42 @@
+name: pulumi-preview
+# Customer CI (halyard-demo/infra): previews the Pulumi program for each pull request that touches it and never deploys it. Assay reads what it posts.
+# The state is an S3 bucket in the account (no Pulumi Cloud); the role can read it and take the lock, and cannot write the program's bucket.
+on:
+  pull_request:
+    paths: ['pulumi/**']
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-pulumi-preview-role
+          aws-region: us-east-1
+      # 1. pulumi/actions: logs in to the S3 backend (`pulumi login s3://...`), previews, comments on the pull request. always-include-summary trims a long comment from the front, so the `Resources:` summary survives.
+      - uses: pulumi/actions@v7
+        with:
+          command: preview
+          stack-name: proof
+          work-dir: pulumi
+          cloud-url: s3://halyard-pulumi-state-363776342490
+          comment-on-pr: true
+          always-include-summary: true
+      # 2. `pulumi preview --json` (the PreviewDigest), posted as its own comment that names the commit it previewed. The CLI is already installed and logged in by step 1.
+      - name: Preview as JSON and post it
+        working-directory: pulumi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          pulumi preview --json --stack proof --non-interactive > ../preview.json
+          { echo "pulumi preview --json for commit ${HEAD::7}, stack halyard/proof"; echo '```json'; cat ../preview.json; echo; echo '```'; } > ../comment.md
+          gh pr comment "$NUMBER" --body-file ../comment.md
