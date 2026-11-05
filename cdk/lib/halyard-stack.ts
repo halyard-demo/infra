@@ -14,7 +14,7 @@ export class HalyardStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
-    // example resource
+    // example resource (a person added this comment, proof 784-cdk run c)
     // const queue = new sqs.Queue(this, 'HalyardQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
