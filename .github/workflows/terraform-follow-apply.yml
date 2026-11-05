@@ -1,0 +1,33 @@
+name: terraform-follow-apply
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'aws-follow/**'
+      - '.github/workflows/terraform-follow-apply.yml'
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: terraform-follow-apply
+  cancel-in-progress: false
+jobs:
+  apply:
+    name: terraform-follow-apply
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aws-follow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+      # The apply role reaches only the proof bucket and the aws-follow state key, and trusts only this repository's main branch.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-follow-apply-role
+          aws-region: us-east-1
+      - run: terraform init -input=false
+      - run: terraform apply -auto-approve -input=false
