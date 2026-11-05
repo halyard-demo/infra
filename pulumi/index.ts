@@ -5,10 +5,10 @@ import * as aws from "@pulumi/aws";
 const bucket = new aws.s3.Bucket("my-bucket");
 const bucketPublicAccessBlock = new aws.s3.BucketPublicAccessBlock("my-bucket-public-access-block", {
     bucket: bucket.id,
-    blockPublicAcls: true,
+    blockPublicAcls: false,
     blockPublicPolicy: true,
     ignorePublicAcls: true,
-    restrictPublicBuckets: true,
+    restrictPublicBuckets: false,
 });
 
 // Export the name of the bucket
