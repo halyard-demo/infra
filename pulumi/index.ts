@@ -5,8 +5,8 @@ import * as aws from "@pulumi/aws";
 const bucket = new aws.s3.Bucket("my-bucket");
 const bucketPublicAccessBlock = new aws.s3.BucketPublicAccessBlock("my-bucket-public-access-block", {
     bucket: bucket.id,
-    blockPublicAcls: false,
-    blockPublicPolicy: false,
+    blockPublicAcls: true,
+    blockPublicPolicy: true,
     ignorePublicAcls: true,
     restrictPublicBuckets: true,
 });
