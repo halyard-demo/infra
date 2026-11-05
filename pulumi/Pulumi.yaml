@@ -3,7 +3,7 @@ runtime: yaml
 description: The data bucket of the halyard demo (Arcturel proof 529-pulumi)
 
 resources:
-  # The bucket the demo's data lives in.
+  # The bucket the demo's data lives in (uploads for the app).
   dataBucket:
     type: aws:s3:BucketV2
     properties:
