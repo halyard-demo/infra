@@ -11,7 +11,7 @@ export class HalyardStack extends cdk.Stack {
 
     new s3.Bucket(this, 'Uploads', {
       bucketName: 'halyard-cdk-data-uploads-a-363776342490',
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS,
     });
 
     // example resource
