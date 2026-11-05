@@ -1,25 +1,23 @@
 #!/usr/bin/env node
-import * as cdk from 'aws-cdk-lib'
-import * as s3 from 'aws-cdk-lib/aws-s3'
-import { Construct } from 'constructs'
+import * as cdk from 'aws-cdk-lib/core';
+import { HalyardStack } from '../lib/halyard-stack';
 
-// The data stack: uploads for the app. Arcturel proof 529-cdk.
-class HalyardDataStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props)
+const app = new cdk.App();
+new HalyardStack(app, 'halyard-cdk-data', {
+  /* If you don't specify 'env', this stack will be environment-agnostic.
+   * Account/Region-dependent features and context lookups will not work,
+   * but a single synthesized template can be deployed anywhere. */
 
-    // Customer uploads. Keep the data when the stack goes.
-    new s3.Bucket(this, 'Uploads', {
-      bucketName: 'halyard-cdk-data-uploads-a-363776342490',
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    })
-  }
-}
+  /* Uncomment the next line to specialize this stack for the AWS Account
+   * and Region that are implied by the current CLI configuration. */
+  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
 
-const app = new cdk.App()
-// The bootstrap-version rule is off: this app is deployed without `cdk bootstrap` (no assets).
-new HalyardDataStack(app, 'HalyardData', {
-  stackName: 'halyard-cdk-data',
+  /* Uncomment the next line if you know exactly what Account and Region you
+   * want to deploy the stack to. */
+  // env: { account: '123456789012', region: 'us-east-1' },
+
+  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+
+  // This stack is deployed without `cdk bootstrap` (no assets), so the bootstrap-version rule is off.
   synthesizer: new cdk.DefaultStackSynthesizer({ generateBootstrapVersionRule: false }),
-})
+});
