@@ -1,18 +1,10 @@
-name: halyard
-runtime: yaml
-description: The data bucket of the halyard demo (Arcturel proof 529-pulumi)
-
-resources:
-  # The bucket the demo's data lives in (uploads for the app).
-  dataBucket:
-    type: aws:s3:BucketV2
-    properties:
-      bucket: halyard-pulumi-data-363776342490
-      tags:
-        arcturel:proof: 529-pulumi
-
-  dataPublicAccessBlock:
-    type: aws:s3:BucketPublicAccessBlock
-    properties:
-      bucket: ${dataBucket.id}
-      blockPublicAcls: true
+name: halyard-pulumi-demo
+description: A minimal AWS TypeScript Pulumi program
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript

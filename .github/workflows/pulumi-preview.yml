@@ -1,16 +1,18 @@
 name: pulumi-preview
-# Customer CI (halyard-demo/infra): previews the Pulumi program for each pull request that touches it and never deploys it. Assay reads what it posts.
-# The state is an S3 bucket in the account (no Pulumi Cloud); the role can read it and take the lock, and cannot write the program's bucket.
+# Customer CI (halyard-demo/infra): previews the Pulumi TypeScript program for each pull request that touches it and never deploys it. Assay reads what it posts.
+# The state is an S3 bucket in the account (no Pulumi Cloud); the role can read it and cannot write the program's buckets.
 on:
   pull_request:
     paths: ['pulumi/**']
-permissions:
-  id-token: write
-  pull-requests: write
-  contents: read
 jobs:
   preview:
     runs-on: ubuntu-latest
+    # A permissions block on the job replaces the workflow's, so put these here, whether or not the workflow has one.
+    # Every permission you do not list is none, so list all three.
+    permissions:
+      contents: read         # to check out the program
+      pull-requests: write   # to post the comment: without it gh pr comment is refused (403)
+      id-token: write        # only if the job signs in to AWS with OIDC
     env:
       PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
       GITHUB_TOKEN: ${{ github.token }}
@@ -20,7 +22,13 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::363776342490:role/halyard-pulumi-preview-role
           aws-region: us-east-1
-      # 1. pulumi/actions: logs in to the S3 backend (`pulumi login s3://...`), previews, comments on the pull request. always-include-summary trims a long comment from the front, so the `Resources:` summary survives.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the program's packages
+        working-directory: pulumi
+        run: npm ci
+      # pulumi/actions: logs in to the S3 backend (`pulumi login s3://...`), previews, comments on the pull request. always-include-summary trims a long comment from the front, so the `Resources:` summary survives.
       - uses: pulumi/actions@v7
         with:
           command: preview
@@ -29,14 +37,17 @@ jobs:
           cloud-url: s3://halyard-pulumi-state-363776342490
           comment-on-pr: true
           always-include-summary: true
-      # 2. `pulumi preview --json` (the PreviewDigest), posted as its own comment that names the commit it previewed. The CLI is already installed and logged in by step 1.
+      # Assay takes this pull request out of draft only on this document. Without this step it stays a draft.
       - name: Preview as JSON and post it
         working-directory: pulumi
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ github.event.pull_request.head.sha }}
           NUMBER: ${{ github.event.pull_request.number }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
         run: |
-          pulumi preview --json --stack proof --non-interactive > ../preview.json
-          { echo "pulumi preview --json for commit ${HEAD::7}, stack halyard/proof"; echo '```json'; cat ../preview.json; echo; echo '```'; } > ../comment.md
+          pulumi login s3://halyard-pulumi-state-363776342490
+          pulumi stack select proof
+          pulumi preview --json --non-interactive > ../preview.json
+          { echo "pulumi preview --json for commit ${HEAD}, stack halyard-pulumi-demo/proof"; echo '```json'; cat ../preview.json; echo; echo '```'; } > ../comment.md
           gh pr comment "$NUMBER" --body-file ../comment.md
