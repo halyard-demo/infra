@@ -16,3 +16,6 @@ resources:
     properties:
       bucket: ${dataBucket.id}
       blockPublicAcls: true
+      blockPublicPolicy: true
+      ignorePublicAcls: true
+      restrictPublicBuckets: true
