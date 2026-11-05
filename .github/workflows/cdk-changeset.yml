@@ -32,13 +32,13 @@ jobs:
         run: |
           NAME="pr-${NUMBER}-${HEAD::7}"
           aws cloudformation create-change-set --stack-name halyard-cdk-data --change-set-name "$NAME" --change-set-type UPDATE \
-            --template-body file://cdk/cdk.out/HalyardData.template.json --description "pull request ${NUMBER}, commit ${HEAD}"
+            --template-body file://cdk/cdk.out/halyard-cdk-data.template.json --description "pull request ${NUMBER}, commit ${HEAD}"
           aws cloudformation wait change-set-create-complete --stack-name halyard-cdk-data --change-set-name "$NAME" || true
           aws cloudformation describe-change-set --stack-name halyard-cdk-data --change-set-name "$NAME" > describe.json
           cat describe.json
       - name: Show what the CDK says changes (cdk diff)
         working-directory: cdk
-        run: npx cdk diff --no-version-reporting HalyardData 2>&1 | tee ../cdk-diff.txt || true
+        run: npx cdk diff --no-version-reporting halyard-cdk-data 2>&1 | tee ../cdk-diff.txt || true
       - name: Post what the change set shows
         env:
           GH_TOKEN: ${{ github.token }}
