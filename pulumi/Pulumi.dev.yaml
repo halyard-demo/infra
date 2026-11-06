@@ -2,4 +2,4 @@ config:
   aws:region: us-east-1
   aws:defaultTags:
     tags:
-      arcturel:proof: 529-pulumi-ts
+      arcturel:proof: pulumi-cloud
