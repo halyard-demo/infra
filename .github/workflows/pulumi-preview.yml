@@ -1,6 +1,6 @@
 name: pulumi-preview
 # Customer CI (halyard-demo/infra): previews the Pulumi TypeScript program for each pull request that touches it and never deploys it. Assay reads what it posts.
-# The state is in Pulumi Cloud (stack arcturel/halyard-cloud/dev), reached with PULUMI_ACCESS_TOKEN; the role cannot write the program's buckets.
+# The state is an S3 bucket in the account (no Pulumi Cloud); the role can read it and cannot write the program's buckets.
 on:
   pull_request:
     paths: ['pulumi/**']
@@ -14,26 +14,27 @@ jobs:
       pull-requests: write   # to post the comment: without it gh pr comment is refused (403)
       id-token: write        # only if the job signs in to AWS with OIDC
     env:
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::363776342490:role/halyard-pcloud-preview-role
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-pulumi-preview-role
           aws-region: us-east-1
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install the program's packages
         working-directory: pulumi
         run: npm ci
-      # pulumi/actions: logs in to Pulumi Cloud with PULUMI_ACCESS_TOKEN, previews, comments on the pull request. always-include-summary trims a long comment from the front, so the `Resources:` summary survives.
+      # pulumi/actions: logs in to the S3 backend (`pulumi login s3://...`), previews, comments on the pull request. always-include-summary trims a long comment from the front, so the `Resources:` summary survives.
       - uses: pulumi/actions@v7
         with:
           command: preview
-          stack-name: arcturel/halyard-cloud/dev
+          stack-name: proof
           work-dir: pulumi
+          cloud-url: s3://halyard-pulumi-state-363776342490
           comment-on-pr: true
           always-include-summary: true
       # Assay takes this pull request out of draft only on this document. Without this step it stays a draft.
@@ -43,14 +44,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HEAD: ${{ github.event.pull_request.head.sha }}
           NUMBER: ${{ github.event.pull_request.number }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
         run: |
-          pulumi login
-          pulumi stack select arcturel/halyard-cloud/dev
-          # A program that does not compile makes the preview exit non-zero: keep the exit code, post what it printed, then fail the job.
-          status=0
-          pulumi preview --json --non-interactive > ../preview.json || status=$?
-          if [ -s ../preview.json ]; then
-            { echo "pulumi preview --json for commit ${HEAD}, stack halyard-cloud/dev"; echo '```json'; cat ../preview.json; echo; echo '```'; } > ../comment.md
-            gh pr comment "$NUMBER" --body-file ../comment.md
-          fi
-          exit "$status"
+          pulumi login s3://halyard-pulumi-state-363776342490
+          pulumi stack select proof
+          pulumi preview --json --non-interactive > ../preview.json
+          { echo "pulumi preview --json for commit ${HEAD}, stack halyard-pulumi-demo/proof"; echo '```json'; cat ../preview.json; echo; echo '```'; } > ../comment.md
+          gh pr comment "$NUMBER" --body-file ../comment.md
