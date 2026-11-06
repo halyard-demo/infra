@@ -1,4 +1,4 @@
-name: halyard-pulumi-demo
+name: halyard-cloud
 description: A minimal AWS TypeScript Pulumi program
 runtime:
   name: nodejs

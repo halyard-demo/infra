@@ -1,5 +1,5 @@
 {
-    "name": "halyard-pulumi-demo",
+    "name": "halyard-cloud",
     "main": "index.ts",
     "devDependencies": {
         "@types/node": "^18",
