@@ -1,0 +1,35 @@
+name: terraform-migrate-apply
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'aws-migrate/**'
+      - '.github/workflows/terraform-migrate-apply.yml'
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: terraform-migrate-apply
+  cancel-in-progress: false
+jobs:
+  apply:
+    name: terraform-migrate-apply
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aws-migrate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+      # The apply role reaches only the two proof database instances and the aws-migrate state key, and trusts only this repository's main branch.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::363776342490:role/halyard-migrate-apply-role
+          aws-region: us-east-1
+      - run: terraform init -input=false
+      - run: terraform apply -auto-approve -input=false
+        env:
+          TF_VAR_db_password: ${{ secrets.HALYARD_MIGRATE_DB_PASSWORD }}
