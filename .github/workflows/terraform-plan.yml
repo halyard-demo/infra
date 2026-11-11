@@ -33,7 +33,7 @@ jobs:
           terraform plan -no-color -input=false -lock=false > plan.txt 2>&1
           echo "exit=$?" >> "$GITHUB_OUTPUT"
           cat plan.txt
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs')
